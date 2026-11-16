@@ -1,5 +1,6 @@
 package br.com.autocenterfiap.cadastro.comum.erro;
 
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpStatus;
@@ -15,15 +16,21 @@ import org.springframework.web.method.annotation.MethodArgumentTypeMismatchExcep
 public class ErroHandler {
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<ErroResponse> validacao(MethodArgumentNotValidException e) {
+    public ResponseEntity<ErroResposta> validacao(MethodArgumentNotValidException e, HttpServletRequest req) {
         var mensagem = e.getBindingResult().getFieldErrors().stream()
                 .map(f -> f.getField() + ": " + f.getDefaultMessage())
                 .findFirst().orElse("Requisicao invalida");
-        return ErroResponse.de(HttpStatus.BAD_REQUEST, "requisicao_invalida", mensagem);
+        return resposta(HttpStatus.BAD_REQUEST, "Requisicao Invalida", mensagem, req);
     }
 
     @ExceptionHandler({HttpMessageNotReadableException.class, MethodArgumentTypeMismatchException.class})
-    public ResponseEntity<ErroResponse> corpoInvalido(Exception e) {
-        return ErroResponse.de(HttpStatus.BAD_REQUEST, "requisicao_invalida", "Requisicao invalida");
+    public ResponseEntity<ErroResposta> corpoInvalido(Exception e, HttpServletRequest req) {
+        return resposta(HttpStatus.BAD_REQUEST, "Requisicao Invalida", "Corpo ou parametro da requisicao invalido", req);
+    }
+
+    public static ResponseEntity<ErroResposta> resposta(HttpStatus status, String erro, String mensagem,
+            HttpServletRequest req) {
+        return ResponseEntity.status(status)
+                .body(new ErroResposta(status.value(), erro, mensagem, req.getRequestURI()));
     }
 }

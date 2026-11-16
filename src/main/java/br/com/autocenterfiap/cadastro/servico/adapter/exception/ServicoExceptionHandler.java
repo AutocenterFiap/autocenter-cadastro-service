@@ -1,0 +1,67 @@
+package br.com.autocenterfiap.cadastro.servico.adapter.exception;
+
+import br.com.autocenterfiap.cadastro.comum.erro.ErroResposta;
+import br.com.autocenterfiap.cadastro.servico.domain.exception.ServicoInativoException;
+import br.com.autocenterfiap.cadastro.servico.domain.exception.ServicoNaoEncontradoException;
+import jakarta.servlet.http.HttpServletRequest;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.core.Ordered;
+import org.springframework.core.annotation.Order;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.RestControllerAdvice;
+
+@Slf4j
+@RestControllerAdvice(basePackages = "br.com.autocenterfiap.cadastro.servico")
+@Order(Ordered.HIGHEST_PRECEDENCE)
+public class ServicoExceptionHandler {
+
+    @ExceptionHandler(ServicoNaoEncontradoException.class)
+    public ResponseEntity<ErroResposta> handleServicoNaoEncontradoException(
+            ServicoNaoEncontradoException ex,
+            HttpServletRequest request) {
+
+        log.warn("Serviço não encontrado na URI={}: {}", request.getRequestURI(), ex.getMessage());
+        ErroResposta erroResposta = new ErroResposta(
+                HttpStatus.NOT_FOUND.value(),
+                "Recurso Não Encontrado",
+                ex.getMessage(),
+                request.getRequestURI()
+        );
+
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(erroResposta);
+    }
+
+    @ExceptionHandler(ServicoInativoException.class)
+    public ResponseEntity<ErroResposta> handleServicoInativoException(
+            ServicoInativoException ex,
+            HttpServletRequest request) {
+
+        log.warn("Serviço inativo na URI={}: {}", request.getRequestURI(), ex.getMessage());
+        ErroResposta erroResposta = new ErroResposta(
+                HttpStatus.UNPROCESSABLE_ENTITY.value(),
+                "Operação Não Permitida",
+                ex.getMessage(),
+                request.getRequestURI()
+        );
+
+        return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(erroResposta);
+    }
+
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<ErroResposta> handleIllegalArgumentException(
+            IllegalArgumentException ex,
+            HttpServletRequest request) {
+
+        log.warn("Argumento inválido de serviço na URI={}: {}", request.getRequestURI(), ex.getMessage());
+        ErroResposta erroResposta = new ErroResposta(
+                HttpStatus.BAD_REQUEST.value(),
+                "Erro de Validação",
+                ex.getMessage(),
+                request.getRequestURI()
+        );
+
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(erroResposta);
+    }
+}
