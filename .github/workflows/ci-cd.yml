@@ -1,0 +1,73 @@
+name: CI/CD - Cadastro Service
+
+on:
+  push:
+    branches: [main, homologacao]
+  pull_request:
+    branches: [main, homologacao]
+
+permissions:
+  contents: read
+
+env:
+  JAVA_VERSION: '21'
+
+jobs:
+  build-test:
+    name: build-test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: ${{ env.JAVA_VERSION }}
+          cache: maven
+
+      - name: Build e testes
+        run: mvn -B verify
+
+      - name: Publicar relatorio JaCoCo
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: jacoco
+          path: target/site/jacoco
+          if-no-files-found: warn
+
+  sonar:
+    name: sonar
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' || github.event.pull_request.head.repo.full_name == github.repository
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: ${{ env.JAVA_VERSION }}
+          cache: maven
+
+      - name: Verify e analise Sonar
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        run: mvn -B verify sonar:sonar -Dsonar.qualitygate.wait=${{ github.event_name == 'pull_request' || github.ref == 'refs/heads/main' }}
+
+  deploy:
+    name: deploy (${{ github.ref_name }})
+    needs: [build-test, sonar]
+    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/homologacao')
+    runs-on: self-hosted
+    environment: ${{ github.ref_name == 'main' && 'producao' || 'homologacao' }}
+    concurrency:
+      group: deploy-cadastro-service-${{ github.ref_name }}
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build, kind load e apply com a imagem do commit
+        env:
+          KIND_CLUSTER: ${{ github.ref_name == 'main' && 'autocenter' || 'autocenter-qa' }}
+        run: ./scripts/deploy-kind.sh "$KIND_CLUSTER" "${{ github.sha }}"
