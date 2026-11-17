@@ -62,6 +62,18 @@ class SegurancaIT {
     }
 
     @Test
+    void swaggerDocumentaAutenticacaoEErros() throws Exception {
+        var respostas = "$.paths['/v1/clientes/{id}'].get.responses";
+        mvc.perform(get("/v3/api-docs"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.components.securitySchemes.bearerAuth.scheme").value("bearer"))
+                .andExpect(jsonPath(respostas + "['401']").exists())
+                .andExpect(jsonPath(respostas + "['403']").exists())
+                .andExpect(jsonPath(respostas + "['404'].content['application/json'].schema['$ref']")
+                        .value("#/components/schemas/ErroResposta"));
+    }
+
+    @Test
     void healthPublico() throws Exception {
         mvc.perform(get("/actuator/health")).andExpect(status().isOk());
     }
