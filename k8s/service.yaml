@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: cadastro-service
+  namespace: autocenter
+  labels:
+    app: cadastro-service
+spec:
+  selector:
+    app: cadastro-service
+  ports:
+    - name: http
+      port: 8097
+      targetPort: 8097
