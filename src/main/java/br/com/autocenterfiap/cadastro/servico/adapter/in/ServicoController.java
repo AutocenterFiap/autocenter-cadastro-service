@@ -8,10 +8,12 @@ import br.com.autocenterfiap.cadastro.comum.paginacao.PaginationRequest;
 import br.com.autocenterfiap.cadastro.servico.application.usecase.*;
 import br.com.autocenterfiap.cadastro.servico.domain.enums.StatusServico;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -63,7 +65,7 @@ public class ServicoController {
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Lista de serviços retornada com sucesso")
     })
-    public ResponseEntity<PageResult<ServicoResponseDTO>> listarTodos(Pageable pageable) {
+    public ResponseEntity<PageResult<ServicoResponseDTO>> listarTodos(@ParameterObject Pageable pageable) {
         PaginationRequest pagination = new PaginationRequest(
                 pageable.getPageNumber(),
                 pageable.getPageSize()
@@ -80,7 +82,8 @@ public class ServicoController {
             @ApiResponse(responseCode = "200", description = "Serviço encontrado"),
             @ApiResponse(responseCode = "404", description = "Serviço não encontrado")
     })
-    public ResponseEntity<ServicoResponseDTO> buscarPorId(@PathVariable Long id) {
+    public ResponseEntity<ServicoResponseDTO> buscarPorId(
+            @Parameter(description = "Identificador do serviço", example = "1") @PathVariable Long id) {
         var output = buscarServicoPorIdUseCase.executar(id);
         var response = ServicoAdapterMapper.servicoOutputToServicoResponse(output);
         return ResponseEntity.ok(response);
@@ -91,7 +94,9 @@ public class ServicoController {
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Lista de serviços filtrada por status retornada com sucesso")
     })
-    public ResponseEntity<PageResult<ServicoResponseDTO>> listaServicosPorStatus(@PathVariable StatusServico status, Pageable pageable) {
+    public ResponseEntity<PageResult<ServicoResponseDTO>> listaServicosPorStatus(
+            @Parameter(description = "Status do serviço", example = "ATIVO") @PathVariable StatusServico status,
+            @ParameterObject Pageable pageable) {
         PaginationRequest pagination = new PaginationRequest(
                 pageable.getPageNumber(),
                 pageable.getPageSize()
@@ -109,7 +114,9 @@ public class ServicoController {
             @ApiResponse(responseCode = "404", description = "Serviço não encontrado"),
             @ApiResponse(responseCode = "400", description = "Dados inválidos fornecidos")
     })
-    public ResponseEntity<ServicoResponseDTO> atualizar(@PathVariable Long id, @Valid @RequestBody ServicoRequestDTO request) {
+    public ResponseEntity<ServicoResponseDTO> atualizar(
+            @Parameter(description = "Identificador do serviço", example = "1") @PathVariable Long id,
+            @Valid @RequestBody ServicoRequestDTO request) {
         var input = ServicoAdapterMapper.atualizarServicoRequestToAtualizarServicoInput(request);
         var output = atualizarServicoUseCase.executar(id, input);
         var response = ServicoAdapterMapper.servicoOutputToServicoResponse(output);
@@ -122,7 +129,8 @@ public class ServicoController {
             @ApiResponse(responseCode = "204", description = "Serviço deletado com sucesso"),
             @ApiResponse(responseCode = "404", description = "Serviço não encontrado")
     })
-    public ResponseEntity<Void> deletar(@PathVariable Long id) {
+    public ResponseEntity<Void> deletar(
+            @Parameter(description = "Identificador do serviço", example = "1") @PathVariable Long id) {
         deletarServicoUseCase.executar(id);
         return ResponseEntity.noContent().build();
     }

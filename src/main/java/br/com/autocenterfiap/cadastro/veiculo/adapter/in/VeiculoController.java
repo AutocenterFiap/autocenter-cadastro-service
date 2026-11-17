@@ -8,6 +8,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -107,7 +108,7 @@ public class VeiculoController {
         description = "Lista de veículos retornada com sucesso"
     )
     @GetMapping
-    public ResponseEntity<PageResult<VeiculoResponseDTO>> listarTodos(Pageable pageable) {
+    public ResponseEntity<PageResult<VeiculoResponseDTO>> listarTodos(@ParameterObject Pageable pageable) {
         PaginationRequest pagination = new PaginationRequest(
             pageable.getPageNumber(),
             pageable.getPageSize()
