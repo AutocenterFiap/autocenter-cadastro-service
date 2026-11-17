@@ -114,9 +114,40 @@ Resultado de `mvn -B verify` (BUILD SUCCESS, gate de 80% de linhas do JaCoCo ate
 Testes: 88 unitarios (Surefire) e 118 de integracao (Failsafe, com Testcontainers MySQL), todos passando. Ficam fora da
 medicao `CadastroServiceApplication`, os DTOs e as entidades JPA.
 
+## Fluxo completo validado (homologacao, `autocenter-qa`, 2026-11-16)
+
+Os quatro servicos rodando no `kind-autocenter-qa` com o mesmo segredo JWT e um token interno de
+`KUBE_CONTEXT=kind-autocenter-qa scripts/gerar-token.sh`. Execucao e Billing acessados por port-forward
+(`18098` e `18099`); OS e Cadastro pelo Ingress (`localhost:18080`).
+
+| Passo | Chamada | Resultado |
+|---|---|---|
+| Cliente inexistente | `POST /v1/ordem-servicos` com `clienteId` 9999 | 404 `Cliente nao encontrado: 9999` |
+| Cliente inativo | idem com `clienteId` 3 (`INATIVO` no seed) | 404 |
+| Veiculo inexistente | idem com `veiculoId` inexistente | 404 |
+| Abrir OS | cliente 1, veiculo 1 | 201, OS 1 `ABERTA` |
+| Item fora do catalogo | `POST /execucoes/1/diagnostico` `{"servicos":[{"servicoId":999}]}` | 422 `Servico 999 nao encontrado no catalogo` |
+| Diagnostico so com IDs | `{"servicos":[{"servicoId":1}],"produtos":[{"produtoId":1,"quantidade":2}]}` | 200; itens com "Troca de Oleo e Filtro" R$ 150,00 e "Filtro de Oleo" 2 x R$ 45,90, vindos do catalogo |
+| Orcamento | `GET /v1/orcamentos/os/1` no Billing | `valorTotal` 241.80 (150,00 + 2 x 45,90); OS em `AGUARDANDO_APROVACAO` |
+| Envio | `POST /v1/orcamentos/1/enviar-cliente` `EMAIL` / `WHATSAPP` | "enviado via EMAIL para joao.silva@email.com" / "via WHATSAPP para 11987654321" |
+| Cadastro fora do ar | `scale deploy/cadastro-service --replicas=0`, abrir OS e concluir diagnostico | 503 `cadastro_indisponivel` nos dois; nenhuma OS gravada |
+
+**Pre-requisito:** os quatro servicos precisam do mesmo `SISTEMA_SEGURANCA_CHAVE_SECRETA`, porque cada um repassa o
+token do usuario ao Cadastro. Para conferir sem expor o valor:
+```bash
+for x in "autocenter os-service-secrets" "autocenter cadastro-service-secrets" \
+         "auto-center-execucao execucao-secrets" "auto-center-billing billing-secrets"; do
+  set -- $x; printf '%-40s ' "$1/$2"
+  kubectl --context kind-autocenter-qa -n $1 get secret $2 \
+    -o jsonpath='{.data.SISTEMA_SEGURANCA_CHAVE_SECRETA}' | base64 -d | sha256sum | cut -c1-12
+done
+```
+
 ## O que ainda nao foi validado
 
 - O pipeline no GitHub: o repositorio ainda nao foi criado na organizacao e o `ci-cd.yml` nunca rodou.
+- O fluxo completo no `kind-autocenter` (producao): la o `execucao-secrets` tem o JWT vazio e o `os-service-secrets`
+  usa outro valor; alinhar os segredos (e o secret do environment `producao` no GitHub da Execucao e do Billing) antes.
 - Entrega de traces e metricas ao Datadog: o tracer esta na imagem, mas `DD_TRACE_ENABLED=false`.
 - A Lambda de autenticacao por CPF da Fase 3 continua lendo `clientes` no RDS da AWS. Ela nao roda no kind e nao foi
   ligada a este servico.
