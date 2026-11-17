@@ -2,8 +2,8 @@ package br.com.autocenterfiap.cadastro.veiculo.application.port;
 
 import java.util.Optional;
 
-import br.com.autocenterfiap.cadastro.veiculo.application.dto.PageResult;
-import br.com.autocenterfiap.cadastro.veiculo.application.dto.PaginationRequest;
+import br.com.autocenterfiap.cadastro.comum.paginacao.PageResult;
+import br.com.autocenterfiap.cadastro.comum.paginacao.PaginationRequest;
 import br.com.autocenterfiap.cadastro.veiculo.domain.entity.Veiculo;
 
 public interface VeiculoRepositoryPort {

@@ -1,4 +1,4 @@
-package br.com.autocenterfiap.cadastro.cliente.application.dto;
+package br.com.autocenterfiap.cadastro.comum.paginacao;
 
 import java.util.List;
 import java.util.function.Function;
@@ -60,4 +60,3 @@ public class PageResult<T> {
         return new PageResult<>(mappedContent, pageNumber, pageSize, totalElements);
     }
 }
-

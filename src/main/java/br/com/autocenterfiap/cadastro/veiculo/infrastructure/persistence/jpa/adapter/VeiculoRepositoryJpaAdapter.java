@@ -1,7 +1,7 @@
 package br.com.autocenterfiap.cadastro.veiculo.infrastructure.persistence.jpa.adapter;
 
-import br.com.autocenterfiap.cadastro.veiculo.application.dto.PageResult;
-import br.com.autocenterfiap.cadastro.veiculo.application.dto.PaginationRequest;
+import br.com.autocenterfiap.cadastro.comum.paginacao.PageResult;
+import br.com.autocenterfiap.cadastro.comum.paginacao.PaginationRequest;
 import br.com.autocenterfiap.cadastro.veiculo.application.port.VeiculoRepositoryPort;
 import br.com.autocenterfiap.cadastro.veiculo.domain.entity.Veiculo;
 import br.com.autocenterfiap.cadastro.veiculo.infrastructure.persistence.jpa.entity.VeiculoJpaEntity;

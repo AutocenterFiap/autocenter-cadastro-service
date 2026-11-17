@@ -1,5 +1,7 @@
 package br.com.autocenterfiap.cadastro.cliente.adapter.mapper;
 
+import java.util.Objects;
+
 import br.com.autocenterfiap.cadastro.cliente.application.dto.*;
 import br.com.autocenterfiap.cadastro.cliente.adapter.in.dto.ClienteRequestDTO;
 import br.com.autocenterfiap.cadastro.cliente.adapter.in.dto.ClienteResponseDTO;
@@ -8,7 +10,7 @@ import br.com.autocenterfiap.cadastro.cliente.adapter.in.dto.EnderecoDTO;
 public class ClienteAdapterMapper {
 
     public static CriarClienteInput criarClienteRequestToCriarClienteInput(ClienteRequestDTO request) {
-        if (request == null) return null;
+        Objects.requireNonNull(request, "request");
 
         return CriarClienteInput.builder()
             .nome(request.getNome())
@@ -22,7 +24,7 @@ public class ClienteAdapterMapper {
     }
 
     public static AtualizarClienteInput atualizarClienteRequestToAtualizarClienteInput(ClienteRequestDTO request) {
-        if (request == null) return null;
+        Objects.requireNonNull(request, "request");
 
         return AtualizarClienteInput.builder()
             .nome(request.getNome())

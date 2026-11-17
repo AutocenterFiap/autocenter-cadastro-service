@@ -1,5 +1,7 @@
 package br.com.autocenterfiap.cadastro.veiculo.adapter.mapper;
 
+import java.util.Objects;
+
 import br.com.autocenterfiap.cadastro.veiculo.adapter.in.dto.VeiculoRequestDTO;
 import br.com.autocenterfiap.cadastro.veiculo.adapter.in.dto.VeiculoResponseDTO;
 import br.com.autocenterfiap.cadastro.veiculo.application.dto.AtualizarVeiculoInput;
@@ -9,7 +11,7 @@ import br.com.autocenterfiap.cadastro.veiculo.application.dto.VeiculoOutput;
 public class VeiculoAdapterMapper {
 
     public static CriarVeiculoInput criarVeiculoRequestToCriarVeiculoInput(VeiculoRequestDTO request) {
-        if (request == null) return null;
+        Objects.requireNonNull(request, "request");
 
         return CriarVeiculoInput.builder()
             .placa(request.getPlaca())
@@ -27,7 +29,7 @@ public class VeiculoAdapterMapper {
     }
 
     public static AtualizarVeiculoInput atualizarVeiculoRequestToAtualizarVeiculoInput(VeiculoRequestDTO request) {
-        if (request == null) return null;
+        Objects.requireNonNull(request, "request");
 
         return AtualizarVeiculoInput.builder()
             .placa(request.getPlaca())

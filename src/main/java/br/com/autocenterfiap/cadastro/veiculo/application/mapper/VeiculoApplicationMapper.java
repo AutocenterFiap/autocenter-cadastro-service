@@ -1,5 +1,7 @@
 package br.com.autocenterfiap.cadastro.veiculo.application.mapper;
 
+import java.util.Objects;
+
 import br.com.autocenterfiap.cadastro.veiculo.application.dto.CriarVeiculoInput;
 import br.com.autocenterfiap.cadastro.veiculo.application.dto.VeiculoOutput;
 import br.com.autocenterfiap.cadastro.veiculo.domain.entity.Veiculo;
@@ -7,7 +9,7 @@ import br.com.autocenterfiap.cadastro.veiculo.domain.entity.Veiculo;
 public class VeiculoApplicationMapper {
 
     public static Veiculo toEntity(CriarVeiculoInput input) {
-        if (input == null) return null;
+        Objects.requireNonNull(input, "input");
 
         return Veiculo.builder()
             .placa(input.getPlaca())

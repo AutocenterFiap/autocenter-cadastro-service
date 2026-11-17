@@ -1,4 +1,4 @@
-package br.com.autocenterfiap.cadastro.servico.application.dto;
+package br.com.autocenterfiap.cadastro.comum.paginacao;
 
 public class PaginationRequest {
 

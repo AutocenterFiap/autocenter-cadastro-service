@@ -1,7 +1,7 @@
 package br.com.autocenterfiap.cadastro.servico.application.usecase;
 
-import br.com.autocenterfiap.cadastro.servico.application.dto.PageResult;
-import br.com.autocenterfiap.cadastro.servico.application.dto.PaginationRequest;
+import br.com.autocenterfiap.cadastro.comum.paginacao.PageResult;
+import br.com.autocenterfiap.cadastro.comum.paginacao.PaginationRequest;
 import br.com.autocenterfiap.cadastro.servico.application.dto.ServicoOutput;
 import br.com.autocenterfiap.cadastro.servico.application.port.ServicoRepositoryPort;
 import br.com.autocenterfiap.cadastro.servico.domain.entity.Servico;

@@ -1,5 +1,7 @@
 package br.com.autocenterfiap.cadastro.cliente.application.mapper;
 
+import java.util.Objects;
+
 import br.com.autocenterfiap.cadastro.cliente.application.dto.*;
 import br.com.autocenterfiap.cadastro.cliente.domain.entity.Cliente;
 import br.com.autocenterfiap.cadastro.cliente.domain.entity.Endereco;
@@ -7,7 +9,7 @@ import br.com.autocenterfiap.cadastro.cliente.domain.entity.Endereco;
 public class ClienteApplicationMapper {
 
     public static Cliente toEntity(CriarClienteInput input) {
-        if (input == null) return null;
+        Objects.requireNonNull(input, "input");
 
         Endereco endereco = toEnderecoEntity(input.getEndereco());
 

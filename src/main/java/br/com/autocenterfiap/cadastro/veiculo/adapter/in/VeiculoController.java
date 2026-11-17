@@ -16,8 +16,8 @@ import org.springframework.web.bind.annotation.*;
 import br.com.autocenterfiap.cadastro.veiculo.adapter.in.dto.VeiculoRequestDTO;
 import br.com.autocenterfiap.cadastro.veiculo.adapter.in.dto.VeiculoResponseDTO;
 import br.com.autocenterfiap.cadastro.veiculo.adapter.mapper.VeiculoAdapterMapper;
-import br.com.autocenterfiap.cadastro.veiculo.application.dto.PageResult;
-import br.com.autocenterfiap.cadastro.veiculo.application.dto.PaginationRequest;
+import br.com.autocenterfiap.cadastro.comum.paginacao.PageResult;
+import br.com.autocenterfiap.cadastro.comum.paginacao.PaginationRequest;
 import br.com.autocenterfiap.cadastro.veiculo.application.usecase.*;
 
 @RestController

@@ -1,5 +1,7 @@
 package br.com.autocenterfiap.cadastro.servico.application.mapper;
 
+import java.util.Objects;
+
 import br.com.autocenterfiap.cadastro.servico.application.dto.CriarServicoInput;
 import br.com.autocenterfiap.cadastro.servico.application.dto.ServicoOutput;
 import br.com.autocenterfiap.cadastro.servico.domain.entity.Servico;
@@ -8,7 +10,7 @@ import br.com.autocenterfiap.cadastro.servico.domain.enums.StatusServico;
 public class ServicoApplicationMapper {
 
     public static Servico toEntity(CriarServicoInput input) {
-        if (input == null) return null;
+        Objects.requireNonNull(input, "input");
 
         return Servico.builder()
                 .descricao(input.getDescricao())

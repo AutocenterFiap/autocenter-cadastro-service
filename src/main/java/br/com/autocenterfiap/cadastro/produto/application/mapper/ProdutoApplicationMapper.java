@@ -1,5 +1,7 @@
 package br.com.autocenterfiap.cadastro.produto.application.mapper;
 
+import java.util.Objects;
+
 import br.com.autocenterfiap.cadastro.produto.application.dto.CriarProdutoInput;
 import br.com.autocenterfiap.cadastro.produto.application.dto.ProdutoOutput;
 import br.com.autocenterfiap.cadastro.produto.domain.entity.Produto;
@@ -7,7 +9,7 @@ import br.com.autocenterfiap.cadastro.produto.domain.entity.Produto;
 public class ProdutoApplicationMapper {
 
     public static Produto toEntity(CriarProdutoInput input) {
-        if (input == null) return null;
+        Objects.requireNonNull(input, "input");
 
         return Produto.builder()
                 .nome(input.getNome())

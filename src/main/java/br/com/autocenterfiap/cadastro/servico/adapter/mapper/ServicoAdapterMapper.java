@@ -1,5 +1,7 @@
 package br.com.autocenterfiap.cadastro.servico.adapter.mapper;
 
+import java.util.Objects;
+
 import br.com.autocenterfiap.cadastro.servico.adapter.in.dto.ServicoRequestDTO;
 import br.com.autocenterfiap.cadastro.servico.adapter.in.dto.ServicoResponseDTO;
 import br.com.autocenterfiap.cadastro.servico.application.dto.AtualizarServicoInput;
@@ -9,7 +11,7 @@ import br.com.autocenterfiap.cadastro.servico.application.dto.ServicoOutput;
 public class ServicoAdapterMapper {
 
     public static CriarServicoInput criarServicoRequestToCriarServicoInput(ServicoRequestDTO request) {
-        if (request == null) return null;
+        Objects.requireNonNull(request, "request");
 
         return CriarServicoInput.builder()
                 .descricao(request.getDescricao())
@@ -19,7 +21,7 @@ public class ServicoAdapterMapper {
     }
 
     public static AtualizarServicoInput atualizarServicoRequestToAtualizarServicoInput(ServicoRequestDTO request) {
-        if (request == null) return null;
+        Objects.requireNonNull(request, "request");
 
         return AtualizarServicoInput.builder()
                 .descricao(request.getDescricao())

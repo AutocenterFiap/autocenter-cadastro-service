@@ -1,7 +1,7 @@
 package br.com.autocenterfiap.cadastro.cliente.application.port;
 
-import br.com.autocenterfiap.cadastro.cliente.application.dto.PageResult;
-import br.com.autocenterfiap.cadastro.cliente.application.dto.PaginationRequest;
+import br.com.autocenterfiap.cadastro.comum.paginacao.PageResult;
+import br.com.autocenterfiap.cadastro.comum.paginacao.PaginationRequest;
 import br.com.autocenterfiap.cadastro.cliente.domain.entity.Cliente;
 
 import java.util.Optional;

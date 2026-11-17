@@ -1,8 +1,8 @@
 package br.com.autocenterfiap.cadastro.cliente.application.usecase;
 
 import br.com.autocenterfiap.cadastro.cliente.application.dto.ClienteOutput;
-import br.com.autocenterfiap.cadastro.cliente.application.dto.PageResult;
-import br.com.autocenterfiap.cadastro.cliente.application.dto.PaginationRequest;
+import br.com.autocenterfiap.cadastro.comum.paginacao.PageResult;
+import br.com.autocenterfiap.cadastro.comum.paginacao.PaginationRequest;
 import br.com.autocenterfiap.cadastro.cliente.application.mapper.ClienteApplicationMapper;
 import br.com.autocenterfiap.cadastro.cliente.application.port.ClienteRepositoryPort;
 import lombok.extern.slf4j.Slf4j;
