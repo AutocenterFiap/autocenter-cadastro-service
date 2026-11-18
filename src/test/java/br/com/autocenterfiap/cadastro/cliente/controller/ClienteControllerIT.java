@@ -1,0 +1,324 @@
+package br.com.autocenterfiap.cadastro.cliente.controller;
+
+import br.com.autocenterfiap.cadastro.cliente.domain.enums.TipoCliente;
+import br.com.autocenterfiap.cadastro.cliente.infrastructure.persistence.jpa.entity.ClienteJpaEntity;
+import br.com.autocenterfiap.cadastro.cliente.infrastructure.persistence.jpa.entity.EnderecoJpaEntity;
+import br.com.autocenterfiap.cadastro.cliente.infrastructure.persistence.jpa.repository.ClienteJpaRepository;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.http.MediaType;
+import org.springframework.security.test.context.support.WithMockUser;
+import org.springframework.context.annotation.Import;
+import br.com.autocenterfiap.cadastro.ContainersConfig;
+import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.time.LocalDate;
+
+import static org.hamcrest.Matchers.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
+@SpringBootTest(properties = "sistema.seguranca.chave.secreta=chave-de-teste")
+@AutoConfigureMockMvc
+@Import(ContainersConfig.class)
+@Transactional
+@DisplayName("ClienteController - Testes de Integração")
+class ClienteControllerIT {
+
+    @Autowired
+    private MockMvc mockMvc;
+
+    @Autowired
+    private ObjectMapper objectMapper;
+
+    @Autowired
+    private ClienteJpaRepository clienteRepository;
+
+
+    private ClienteJpaEntity clientePF;
+    private ClienteJpaEntity clientePJ;
+    private EnderecoJpaEntity endereco;
+
+    @BeforeEach
+    void setUp() {
+        clienteRepository.deleteAll();
+        clienteRepository.flush();
+
+        // Setup Endereço
+        endereco = new EnderecoJpaEntity(
+                "01310100",
+                "Avenida Paulista",
+                "1578",
+                "Andar 5",
+                "Bela Vista",
+                "São Paulo",
+                "SP"
+        );
+
+        // Setup Cliente Pessoa Física
+        clientePF = new ClienteJpaEntity();
+        clientePF.setNome("João da Silva");
+        clientePF.setTipoCliente(TipoCliente.PESSOA_FISICA);
+        clientePF.setDocumento("11144477735");
+        clientePF.setEmail("joao.silva@email.com");
+        clientePF.setTelefone("11987654321");
+        clientePF.setEndereco(endereco);
+        clientePF.setDataNascimento(LocalDate.of(1990, 5, 15));
+
+        // Setup Cliente Pessoa Jurídica
+        clientePJ = new ClienteJpaEntity();
+        clientePJ.setNome("Empresa ABC LTDA");
+        clientePJ.setTipoCliente(TipoCliente.PESSOA_JURIDICA);
+        clientePJ.setDocumento("11222333000181");
+        clientePJ.setEmail("contato@empresaabc.com");
+        clientePJ.setTelefone("1133334444");
+        clientePJ.setEndereco(endereco);
+    }
+
+    @Test
+    @WithMockUser(authorities = "ROLE_INTERNO")
+    void deveListarTodosOsClientes() throws Exception {
+        clienteRepository.save(clientePF);
+        clienteRepository.save(clientePJ);
+
+        mockMvc.perform(get("/v1/clientes")
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content", hasSize(2)))
+                .andExpect(jsonPath("$.content[0].nome", notNullValue()))
+                .andExpect(jsonPath("$.content[1].nome", notNullValue()))
+                .andExpect(jsonPath("$.totalElements", is(2)))
+                .andExpect(jsonPath("$.totalPages", is(1)))
+                .andExpect(jsonPath("$.pageSize", is(20)));
+    }
+
+    @Test
+    @WithMockUser(authorities = "ROLE_INTERNO")
+    void deveRetornarListaVaziaQuandoNaoHouverClientes() throws Exception {
+        mockMvc.perform(get("/v1/clientes")
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content", hasSize(0)))
+                .andExpect(jsonPath("$.totalElements", is(0)))
+                .andExpect(jsonPath("$.totalPages", is(0)));
+    }
+
+    @Test
+    @WithMockUser(authorities = "ROLE_INTERNO")
+    void deveBuscarClientePorIdComSucesso() throws Exception {
+        ClienteJpaEntity clienteSalvo = clienteRepository.save(clientePF);
+
+        mockMvc.perform(get("/v1/clientes/{id}", clienteSalvo.getId())
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id", is(clienteSalvo.getId().intValue())))
+                .andExpect(jsonPath("$.nome", is("João da Silva")))
+                .andExpect(jsonPath("$.documento", is("11144477735")))
+                .andExpect(jsonPath("$.tipoCliente", is("PESSOA_FISICA")));
+    }
+
+    @Test
+    @WithMockUser(authorities = "ROLE_INTERNO")
+    void deveRetornar404AoBuscarClienteInexistentePorId() throws Exception {
+        mockMvc.perform(get("/v1/clientes/{id}", 999L)
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    @WithMockUser(authorities = "ROLE_INTERNO")
+    void deveBuscarClientePorDocumentoComSucesso() throws Exception {
+        clienteRepository.save(clientePF);
+
+        mockMvc.perform(get("/v1/clientes/documento/{documento}", "11144477735")
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.nome", is("João da Silva")))
+                .andExpect(jsonPath("$.documento", is("11144477735")));
+    }
+
+    @Test
+    @WithMockUser(authorities = "ROLE_INTERNO")
+    void deveRetornar404AoBuscarClienteInexistentePorDocumento() throws Exception {
+        mockMvc.perform(get("/v1/clientes/documento/{documento}", "99999999999")
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    @WithMockUser(authorities = "ROLE_INTERNO")
+    void deveCriarClientePessoaFisicaComSucesso() throws Exception {
+        mockMvc.perform(post("/v1/clientes")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(clientePF)))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.id", notNullValue()))
+                .andExpect(jsonPath("$.nome", is("João da Silva")))
+                .andExpect(jsonPath("$.documento", is("11144477735")))
+                .andExpect(jsonPath("$.tipoCliente", is("PESSOA_FISICA")))
+                .andExpect(jsonPath("$.email", is("joao.silva@email.com")));
+    }
+
+    @Test
+    @WithMockUser(authorities = "ROLE_INTERNO")
+    void deveCriarClientePessoaJuridicaComSucesso() throws Exception {
+        mockMvc.perform(post("/v1/clientes")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(clientePJ)))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.id", notNullValue()))
+                .andExpect(jsonPath("$.nome", is("Empresa ABC LTDA")))
+                .andExpect(jsonPath("$.documento", is("11222333000181")))
+                .andExpect(jsonPath("$.tipoCliente", is("PESSOA_JURIDICA")));
+    }
+
+    @Test
+    @WithMockUser(authorities = "ROLE_INTERNO")
+    void deveRetornar400AoCriarClienteComDadosInvalidos() throws Exception {
+        ClienteJpaEntity clienteInvalido = new ClienteJpaEntity();
+        clienteInvalido.setNome(""); // nome vazio - inválido
+        clienteInvalido.setTipoCliente(TipoCliente.PESSOA_FISICA);
+        clienteInvalido.setDocumento("11144477735");
+
+        mockMvc.perform(post("/v1/clientes")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(clienteInvalido)))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    @WithMockUser(authorities = "ROLE_INTERNO")
+    void deveRetornar409AoCriarClienteComDocumentoJaCadastrado() throws Exception {
+        clienteRepository.save(clientePF);
+
+        ClienteJpaEntity clienteDuplicado = new ClienteJpaEntity();
+        clienteDuplicado.setNome("Maria da Silva");
+        clienteDuplicado.setTipoCliente(TipoCliente.PESSOA_FISICA);
+        clienteDuplicado.setDocumento("11144477735"); // mesmo documento
+        clienteDuplicado.setEmail("maria@email.com");
+        clienteDuplicado.setTelefone("11888887777");
+        clienteDuplicado.setEndereco(endereco);
+
+        mockMvc.perform(post("/v1/clientes")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(clienteDuplicado)))
+                .andExpect(status().isConflict());
+    }
+
+    @Test
+    @WithMockUser(authorities = "ROLE_INTERNO")
+    void deveRetornar409AoCriarClienteComEmailJaCadastrado() throws Exception {
+        clienteRepository.save(clientePF);
+
+        ClienteJpaEntity clienteDuplicado = new ClienteJpaEntity();
+        clienteDuplicado.setNome("Maria da Silva");
+        clienteDuplicado.setTipoCliente(TipoCliente.PESSOA_FISICA);
+        clienteDuplicado.setDocumento("52998224725");
+        clienteDuplicado.setEmail("joao.silva@email.com"); // mesmo email
+        clienteDuplicado.setTelefone("11888887777");
+        clienteDuplicado.setEndereco(endereco);
+
+        mockMvc.perform(post("/v1/clientes")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(clienteDuplicado)))
+                .andExpect(status().isConflict());
+    }
+
+    @Test
+    @WithMockUser(authorities = "ROLE_INTERNO")
+    void deveRetornar400AoCriarClientePFComCpfInvalido() throws Exception {
+        clientePF.setDocumento("12345678901"); // CPF inválido
+
+        mockMvc.perform(post("/v1/clientes")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(clientePF)))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    @WithMockUser(authorities = "ROLE_INTERNO")
+    void deveRetornar400AoCriarClientePJComCnpjInvalido() throws Exception {
+        clientePJ.setDocumento("12345678901234"); // CNPJ inválido
+
+        mockMvc.perform(post("/v1/clientes")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(clientePJ)))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    @WithMockUser(authorities = "ROLE_INTERNO")
+    void deveAtualizarClienteComSucesso() throws Exception {
+        ClienteJpaEntity clienteSalvo = clienteRepository.save(clientePF);
+
+        clienteSalvo.setNome("João da Silva Updated");
+        clienteSalvo.setTelefone("11999998888");
+
+        mockMvc.perform(put("/v1/clientes/{id}", clienteSalvo.getId())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(clienteSalvo)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.nome", is("João da Silva Updated")))
+                .andExpect(jsonPath("$.telefone", is("11999998888")))
+                .andExpect(jsonPath("$.documento", is("11144477735")));
+    }
+
+    @Test
+    @WithMockUser(authorities = "ROLE_INTERNO")
+    void deveRetornar404AoAtualizarClienteInexistente() throws Exception {
+        mockMvc.perform(put("/v1/clientes/{id}", 999L)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(clientePF)))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    @WithMockUser(authorities = "ROLE_INTERNO")
+    void deveRetornar400AoTentarAlterarDocumento() throws Exception {
+        ClienteJpaEntity clienteSalvo = clienteRepository.save(clientePF);
+
+        ClienteJpaEntity clienteComDocumentoAlterado = new ClienteJpaEntity();
+        clienteComDocumentoAlterado.setId(clienteSalvo.getId());
+        clienteComDocumentoAlterado.setNome(clienteSalvo.getNome());
+        clienteComDocumentoAlterado.setTipoCliente(clienteSalvo.getTipoCliente());
+        clienteComDocumentoAlterado.setDocumento("52998224725"); // documento diferente
+        clienteComDocumentoAlterado.setEmail(clienteSalvo.getEmail());
+        clienteComDocumentoAlterado.setTelefone(clienteSalvo.getTelefone());
+        clienteComDocumentoAlterado.setEndereco(clienteSalvo.getEndereco());
+        clienteComDocumentoAlterado.setDataNascimento(clienteSalvo.getDataNascimento());
+
+        mockMvc.perform(put("/v1/clientes/{id}", clienteSalvo.getId())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(clienteComDocumentoAlterado)))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    @WithMockUser(authorities = "ROLE_INTERNO")
+    void deveDeletarClienteComSucesso() throws Exception {
+        ClienteJpaEntity clienteSalvo = clienteRepository.save(clientePF);
+
+        mockMvc.perform(delete("/v1/clientes/{id}", clienteSalvo.getId())
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isNoContent());
+
+        mockMvc.perform(get("/v1/clientes/{id}", clienteSalvo.getId())
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    @WithMockUser(authorities = "ROLE_INTERNO")
+    void deveRetornar404AoDeletarClienteInexistente() throws Exception {
+        mockMvc.perform(delete("/v1/clientes/{id}", 999L)
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isNotFound());
+    }
+}
