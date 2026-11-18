@@ -2,7 +2,7 @@
 
 Microsservico de Cadastro do AutoCenter (FIAP Tech Challenge, Fase 4): **clientes, veiculos, servicos e produtos
 (com estoque)**. Foi extraido dos modulos `cliente`, `veiculo`, `servico` e `produto` do monolito, tem MySQL proprio e
-atende so REST. Nao participa da Saga. Arquitetura em [`docs/arquitetura.md`](docs/arquitetura.md).
+atende so REST. Nao participa da Saga, pois trata-se de um servico de cadastro puro: sua unica responsabilidade e gerenciar dados de clientes, veiculos, servicos e estoque. Sua comunicacao e exclusivamente REST sincrona — nao publica nem consome eventos de orquestracao. Seu papel no ecossistema e **passivo**: os demais microsservicos (OS Service, Billing e Execucao) o consultam pontualmente via REST para validar a existencia de clientes e veiculos antes de prosseguir com seus proprios fluxos. Por nao executar operacoes dentro do fluxo transacional distribuido (criacao de OS, aprovacao de orcamento, execucao de reparo), nao ha etapas a compensar ou reverter — logo, a participacao no Saga Pattern nao se aplica a este servico. Arquitetura em [`docs/arquitetura.md`](docs/arquitetura.md).
 
 ```mermaid
 flowchart LR
@@ -149,5 +149,6 @@ done
 - O fluxo completo no `kind-autocenter` (producao): la o `execucao-secrets` tem o JWT vazio e o `os-service-secrets`
   usa outro valor; alinhar os segredos (e o secret do environment `producao` no GitHub da Execucao e do Billing) antes.
 - Entrega de traces e metricas ao Datadog: o tracer esta na imagem, mas `DD_TRACE_ENABLED=false`.
+- Os dashboards do Datadog estao versionados em [`/docs`](./docs/), contendo arquivos `.json` importaveis diretamente na plataforma Datadog.
 - A Lambda de autenticacao por CPF da Fase 3 continua lendo `clientes` no RDS da AWS. Ela nao roda no kind e nao foi
   ligada a este servico.
